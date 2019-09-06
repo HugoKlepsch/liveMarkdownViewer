@@ -1,0 +1,11 @@
+*.sw*
+*.o
+*.pyc
+venv/
+*workspace.xml
+*modules.xml
+*vcs.xml
+*encodings.xml
+liveMarkdownViewer.iml
+*misc.xml
+Session.vim
