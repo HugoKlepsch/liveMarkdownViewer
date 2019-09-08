@@ -5,17 +5,28 @@ from argparse import ArgumentParser
 from io import BytesIO
 
 import markdown
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTextBrowser
-from PyQt5.QtCore import QFileSystemWatcher
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTextBrowser
 
-class LiveMarkdownViewer:
+
+class LiveMarkdownViewer(QApplication):
     """Live markdown viewer"""
     def __init__(self, filename):
         """
         Constructor
         :param str filename: The file to watch
         """
+        super().__init__([])
+
         self.filename = filename
+        self.setApplicationName('Live Markdown Viewer - {filename}'.format(filename=self.filename))
+
+        self.window = QMainWindow()
+
+        self.viewer = QTextBrowser()
+        self.update_viewer()
+
+        self.window.setCentralWidget(self.viewer)
+        self.window.show()
 
     def render_to_html_string(self):
         """
@@ -27,20 +38,9 @@ class LiveMarkdownViewer:
         fake_file.seek(0)
         return str(fake_file.read(), 'utf-8')
 
-    def update_preview(self):
+    def update_viewer(self):
         html = self.render_to_html_string()
-
-    def run_app(self):
-        app = QApplication([])
-        app.setApplicationName('Live Markdown Viewer - {filename}'.format(filename=self.filename))
-        window = QMainWindow()
-
-        viewer = QTextBrowser()
-        viewer.setHtml(self.render_to_html_string())
-
-        window.setCentralWidget(viewer)
-        window.show()
-        app.exec_()
+        self.viewer.setHtml(html)
 
 
 def main():
@@ -51,7 +51,7 @@ def main():
     args = argparser.parse_args()
 
     lmv = LiveMarkdownViewer(args.file)
-    lmv.run_app()
+    lmv.exec()
 
 
 if __name__ == '__main__':
