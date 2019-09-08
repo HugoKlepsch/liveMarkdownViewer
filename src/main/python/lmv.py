@@ -7,7 +7,9 @@ from time import sleep
 
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 import markdown
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextBrowser
+from markdown.extensions import (abbr, admonition, attr_list, codehilite, def_list, extra, fenced_code, footnotes,
+                                 legacy_attrs, legacy_em, meta, nl2br, sane_lists, smarty, tables, toc, wikilinks)
+from PyQt5.QtWidgets import QMainWindow, QTextBrowser
 from PyQt5.QtCore import QFileSystemWatcher, QFileInfo
 
 
@@ -64,7 +66,17 @@ class LiveMarkdownViewer:
         :return: The rendered HTML of the markdown file
         """
         fake_file = BytesIO()
-        markdown.markdownFromFile(input=self.filename, output=fake_file)
+        markdown.markdownFromFile(input=self.filename,
+                                  output=fake_file,
+                                  extensions=[abbr.AbbrExtension(), admonition.AdmonitionExtension(),
+                                              attr_list.AttrListExtension(), codehilite.CodeHiliteExtension(),
+                                              def_list.DefListExtension(), extra.ExtraExtension(),
+                                              fenced_code.FencedCodeExtension(), footnotes.FootnoteExtension(),
+                                              legacy_attrs.LegacyAttrExtension(), legacy_em.LegacyEmExtension(),
+                                              meta.MetaExtension(), nl2br.Nl2BrExtension(),
+                                              sane_lists.SaneListExtension(), smarty.SmartyExtension(),
+                                              tables.TableExtension(), toc.TocExtension(),
+                                              wikilinks.WikiLinkExtension()])
         fake_file.seek(0)
         return str(fake_file.read(), 'utf-8')
 
