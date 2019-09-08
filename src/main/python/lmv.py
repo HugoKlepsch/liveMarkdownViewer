@@ -5,22 +5,21 @@ from argparse import ArgumentParser
 from io import BytesIO
 from time import sleep
 
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
 import markdown
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextBrowser
 from PyQt5.QtCore import QFileSystemWatcher, QFileInfo
 
 
-class LiveMarkdownViewer(QApplication):
+class LiveMarkdownViewer:
     """Live markdown viewer"""
-    def __init__(self, filename):
+    def __init__(self, filename, app):
         """
         Constructor
         :param str filename: The file to watch
         """
-        super().__init__([])
-
         self.filename = filename
-        self.setApplicationName('Live Markdown Viewer - {filename}'.format(filename=self.filename))
+        app.setApplicationName('Live Markdown Viewer - {filename}'.format(filename=self.filename))
 
         self.window = QMainWindow()
 
@@ -82,8 +81,12 @@ def main():
     # TODO use the arguments in some way
     args = argparser.parse_args()
 
-    lmv = LiveMarkdownViewer(args.file)
-    lmv.exec()
+    app_ctx = ApplicationContext()
+
+    lmv = LiveMarkdownViewer(args.file, app_ctx.app)
+
+    exit_code = app_ctx.app.exec_()
+    exit(exit_code)
 
 
 if __name__ == '__main__':

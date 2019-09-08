@@ -9,3 +9,4 @@ venv/
 liveMarkdownViewer.iml
 *misc.xml
 Session.vim
+target/

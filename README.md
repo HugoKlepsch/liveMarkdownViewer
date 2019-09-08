@@ -8,4 +8,11 @@ A work in progress simple markdown viewer with live updating.
 
 `. setup.sh`
 
+## How to run
+
+```
+. setup.sh
+python src/main/python/lmv.py <path to markdown file>
+```
+
 I accept pull requests.
