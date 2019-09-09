@@ -3,6 +3,7 @@ Live markdown viewer
 """
 from argparse import ArgumentParser
 from io import BytesIO
+import logging
 from time import sleep
 
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
@@ -15,19 +16,23 @@ from PyQt5.QtCore import QFileSystemWatcher, QFileInfo
 
 class LiveMarkdownViewer:
     """Live markdown viewer"""
-    def __init__(self, filename, app):
+    def __init__(self, filename, app, logger):
         """
         Constructor
         :param str filename: The file to watch
         """
+        self.logger = logger
+
         self.filename = filename
         app.setApplicationName('Live Markdown Viewer - {filename}'.format(filename=self.filename))
 
         self.window = QMainWindow()
 
+        self.logger.debug('Creating viewer component')
         self.viewer = QTextBrowser()
         self.update_viewer()
 
+        self.logger.debug('Creating file watcher')
         self.watcher = QFileSystemWatcher()
         self.watcher.addPath(self.filename)
         self.watcher.fileChanged.connect(self._file_change_handler)
@@ -42,6 +47,7 @@ class LiveMarkdownViewer:
         watching it. To get around this, we can wait a short time to see if the file returns.
         :param str path: The path of the changed file.
         """
+        self.logger.debug('File changed (%s)', path)
         file_info = QFileInfo(path)
 
         time_slept = 0.0
@@ -49,22 +55,25 @@ class LiveMarkdownViewer:
 
         # Sleep up to 1 second while waiting for the file to be re-created
         while not file_info.exists() and time_slept < 1.0:
+            self.logger.debug('File deleted... waiting (%s)', path)
             time_slept += sleep_for
             sleep(sleep_for)
 
         if file_info.exists():
+            self.logger.debug('File exists (%s)', path)
             self.watcher.addPath(path)
 
             self.update_viewer()
         else:
             # File deleted ?
-            pass
+            self.logger.debug('File deleted, not re-adding watcher (%s)', path)
 
     def render_to_html_string(self):
         """
         Render the watched document to html, returning the html string
         :return: The rendered HTML of the markdown file
         """
+        self.logger.debug('Rendering markdown (%s)', self.filename)
         fake_file = BytesIO()
         markdown.markdownFromFile(input=self.filename,
                                   output=fake_file,
@@ -82,7 +91,9 @@ class LiveMarkdownViewer:
 
     def update_viewer(self):
         """Update the viewer"""
+        self.logger.debug('Updating viewer')
         html = self.render_to_html_string()
+
         self.viewer.setHtml(html)
 
 
@@ -90,13 +101,20 @@ def main():
     """ main """
     argparser = ArgumentParser()
     argparser.add_argument('file', type=str, help='The markdown file to view')
+    argparser.add_argument('-v', '--verbose', action='store_true', help='Verbose logging')
     # TODO use the arguments in some way
     args = argparser.parse_args()
+    logger = logging.getLogger("Live markdown viewer")
+    logger.setLevel(level=logging.DEBUG if args.verbose else logging.INFO)
+    logger.addHandler(logging.StreamHandler())
 
+    logger.debug('Initializing Qt')
     app_ctx = ApplicationContext()
 
-    lmv = LiveMarkdownViewer(args.file, app_ctx.app)
+    logger.debug('Initializing lmv')
+    _lmv = LiveMarkdownViewer(args.file, app_ctx.app, logger)
 
+    logger.debug('Opening window')
     exit_code = app_ctx.app.exec_()
     exit(exit_code)
 
